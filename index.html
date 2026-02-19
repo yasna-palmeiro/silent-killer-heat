@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Making a Silent Killer Visible</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,700;0,900;1,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --orange:   #F97316;
+      --orange-light: #FDBA74;
+      --orange-dark:  #C2410C;
+      --teal:     #0F5F5F;
+      --teal-mid: #0D9488;
+      --teal-light: #CCFBF1;
+      --cream:    #FFF8F0;
+      --dark:     #1A1A2E;
+      --text:     #2D3748;
+      --muted:    #718096;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ── LANGUAGE TOGGLE ── */
+    #lang-toggle {
+      position: fixed;
+      top: 1.2rem;
+      right: 1.5rem;
+      z-index: 999;
+      background: var(--teal);
+      color: #fff;
+      border: none;
+      border-radius: 2rem;
+      padding: .45rem 1.1rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: .06em;
+      transition: background .25s, transform .15s;
+      box-shadow: 0 2px 12px rgba(15,95,95,.35);
+    }
+    #lang-toggle:hover { background: var(--teal-mid); transform: translateY(-1px); }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh;
+      background: var(--teal);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 5rem 4rem 5rem 5rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      background: var(--orange);
+      color: #fff;
+      font-size: .78rem;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: .3rem .9rem;
+      border-radius: 2rem;
+      margin-bottom: 1.8rem;
+      width: fit-content;
+    }
+
+    .hero-title {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(2.2rem, 4vw, 3.4rem);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.15;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      font-weight: 300;
+      color: var(--orange-light);
+    }
+
+    .hero-subtitle {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,.72);
+      line-height: 1.7;
+      max-width: 42ch;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .6rem;
+    }
+
+    .badge {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      color: rgba(255,255,255,.88);
+      font-size: .78rem;
+      padding: .3rem .85rem;
+      border-radius: 2rem;
+      backdrop-filter: blur(4px);
+    }
+
+    /* Right side visual */
+    .hero-right {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .heat-graphic {
+      position: relative;
+      width: 380px;
+      height: 380px;
+    }
+
+    .heat-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      animation: pulse 3s ease-in-out infinite;
+    }
+    .heat-ring:nth-child(1) {
+      background: radial-gradient(circle, rgba(249,115,22,.7) 0%, rgba(249,115,22,0) 70%);
+      animation-delay: 0s;
+    }
+    .heat-ring:nth-child(2) {
+      background: radial-gradient(circle, rgba(249,115,22,.4) 0%, rgba(249,115,22,0) 65%);
+      transform: scale(1.25);
+      animation-delay: .7s;
+    }
+    .heat-ring:nth-child(3) {
+      background: radial-gradient(circle, rgba(249,115,22,.2) 0%, rgba(249,115,22,0) 60%);
+      transform: scale(1.6);
+      animation-delay: 1.4s;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: .6; transform: scale(var(--s, 1)); }
+      50% { opacity: 1; transform: scale(calc(var(--s, 1) * 1.07)); }
+    }
+
+    .heat-icon {
+      position: absolute;
+      inset: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 7rem;
+      filter: drop-shadow(0 0 30px rgba(249,115,22,.8));
+      animation: float 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+      50% { transform: translate(-50%, -50%) translateY(-14px); }
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      background: rgba(255,248,240,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(249,115,22,.15);
+      z-index: 100;
+      padding: 0 4rem;
+      display: flex;
+      align-items: center;
+      height: 56px;
+      gap: 2.5rem;
+    }
+
+    nav a {
+      color: var(--teal);
+      text-decoration: none;
+      font-size: .88rem;
+      font-weight: 500;
+      letter-spacing: .04em;
+      padding: .25rem 0;
+      border-bottom: 2px solid transparent;
+      transition: color .2s, border-color .2s;
+    }
+    nav a:hover { color: var(--orange); border-bottom-color: var(--orange); }
+
+    /* ── SECTIONS ── */
+    section { padding: 6rem 0; }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2.5rem;
+    }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-label span {
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--orange);
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      max-width: 60px;
+      height: 2px;
+      background: var(--orange-light);
+      border-radius: 1px;
+    }
+
+    h2 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      font-weight: 700;
+      color: var(--teal);
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── ABOUT ── */
+    #about { background: var(--cream); }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 5rem;
+      align-items: start;
+    }
+
+    .about-text p {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: var(--text);
+      margin-bottom: 1.2rem;
+    }
+
+    .about-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .stat-card {
+      background: var(--teal);
+      border-radius: 16px;
+      padding: 1.5rem 1.8rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform .2s;
+    }
+    .stat-card:hover { transform: translateX(6px); }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      right: -20px;
+      top: -20px;
+      width: 80px;
+      height: 80px;
+      background: rgba(249,115,22,.2);
+      border-radius: 50%;
+    }
+
+    .stat-num {
+      font-family: 'Fraunces', serif;
+      font-size: 2.4rem;
+      font-weight: 900;
+      color: var(--orange-light);
+      line-height: 1;
+      margin-bottom: .3rem;
+    }
+
+    .stat-label { color: rgba(255,255,255,.8); font-size: .9rem; }
+
+    /* ── RESEARCH LINES ── */
+    #research { background: white; }
+
+    .lines-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+    }
+
+    .line-card {
+      border-radius: 16px;
+      padding: 2rem;
+      border: 2px solid transparent;
+      transition: border-color .25s, transform .25s, box-shadow .25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .line-card:nth-child(1) { background: #FFF7ED; }
+    .line-card:nth-child(2) { background: #F0FDFA; }
+    .line-card:nth-child(3) { background: #FEF3C7; }
+    .line-card:nth-child(4) { background: #F0FDF4; }
+    .line-card:nth-child(5) { background: #FDF2F8; }
+    .line-card:nth-child(6) { background: #EFF6FF; }
+
+    .line-card:hover {
+      border-color: var(--orange-light);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(249,115,22,.12);
+    }
+
+    .line-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .line-card h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--teal);
+      margin-bottom: .7rem;
+    }
+
+    .line-card p {
+      font-size: .9rem;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+
+    /* ── TEAM ── */
+    #team { background: var(--teal); }
+    #team h2 { color: white; }
+    #team .section-label span { color: var(--orange-light); }
+
+    .team-intro {
+      color: rgba(255,255,255,.72);
+      font-size: 1rem;
+      line-height: 1.7;
+      max-width: 55ch;
+      margin-bottom: 3rem;
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.2rem;
+    }
+
+    .team-card {
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 16px;
+      padding: 1.8rem 1.4rem;
+      text-align: center;
+      transition: background .25s, transform .25s;
+    }
+    .team-card:hover {
+      background: rgba(249,115,22,.15);
+      transform: translateY(-4px);
+    }
+
+    .team-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fraunces', serif;
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: white;
+      margin: 0 auto 1rem;
+    }
+
+    .team-card h4 {
+      color: white;
+      font-size: .95rem;
+      font-weight: 600;
+      margin-bottom: .3rem;
+    }
+
+    .team-card .role {
+      color: var(--orange-light);
+      font-size: .78rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .team-card .affil {
+      color: rgba(255,255,255,.5);
+      font-size: .78rem;
+      margin-top: .3rem;
+    }
+
+    /* ── INSTITUTIONS ── */
+    #institutions { background: white; }
+
+    .inst-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .inst-pill {
+      background: var(--teal-light);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      font-size: .88rem;
+      font-weight: 500;
+      color: var(--teal);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .inst-pill:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(15,95,95,.12); }
+
+    .inst-flag { font-size: 1.3rem; }
+
+    /* ── CONTACT ── */
+    #contact { background: var(--cream); }
+
+    .contact-box {
+      background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+      border-radius: 24px;
+      padding: 3.5rem;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 3rem;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .contact-box::before {
+      content: '🌡️';
+      position: absolute;
+      right: 2rem;
+      bottom: -1rem;
+      font-size: 8rem;
+      opacity: .12;
+    }
+
+    .contact-box h2 { color: white; margin-bottom: .8rem; }
+
+    .contact-box p { color: rgba(255,255,255,.82); line-height: 1.7; }
+
+    .contact-info { display: flex; flex-direction: column; gap: 1rem; }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: rgba(255,255,255,.12);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      backdrop-filter: blur(4px);
+    }
+
+    .contact-item-icon { font-size: 1.4rem; }
+
+    .contact-item-text strong {
+      color: white;
+      display: block;
+      font-size: .8rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: .15rem;
+    }
+
+    .contact-item-text span { color: rgba(255,255,255,.8); font-size: .9rem; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--dark);
+      color: rgba(255,255,255,.5);
+      text-align: center;
+      padding: 2rem;
+      font-size: .82rem;
+    }
+
+    footer span { color: var(--orange-light); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      #hero { grid-template-columns: 1fr; }
+      .hero-right { display: none; }
+      .hero-left { padding: 5rem 2rem 3rem; }
+      nav { padding: 0 1.5rem; gap: 1.2rem; overflow-x: auto; }
+      .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+      .lines-grid { grid-template-columns: 1fr; }
+      .contact-box { grid-template-columns: 1fr; }
+      #lang-toggle { top: .8rem; right: .8rem; }
+    }
+
+    /* ── BILINGUAL HELPERS ── */
+    [data-en], [data-es] { transition: opacity .2s; }
+    body.lang-es [data-en] { display: none; }
+    body.lang-en [data-es] { display: none; }
+  </style>
+</head>
+<body class="lang-en">
+
+<button id="lang-toggle" onclick="toggleLang()">🌐 ES</button>
+
+<!-- ══════ HERO ══════ -->
+<section id="hero">
+  <div class="hero-left">
+    <div class="hero-tag">
+      <span data-en>Research Project · Latin America</span>
+      <span data-es>Proyecto de Investigación · América Latina</span>
+    </div>
+    <h1 class="hero-title">
+      <span data-en>Making a <em>Silent Killer</em> Visible</span>
+      <span data-es>Haciendo visible a un <em>asesino silencioso</em></span>
+    </h1>
+    <p class="hero-subtitle">
+      <span data-en>Catalysing policy action to protect school students' health and wellbeing from extreme heat amidst a changing climate in Latin America.</span>
+      <span data-es>Catalizando acción política para proteger la salud y el bienestar de estudiantes frente al calor extremo en un clima cambiante en América Latina.</span>
+    </p>
+    <div class="hero-badges">
+      <span class="badge">🌡️ <span data-en>Extreme Heat</span><span data-es>Calor Extremo</span></span>
+      <span class="badge">🏫 <span data-en>School Health</span><span data-es>Salud Escolar</span></span>
+      <span class="badge">🌎 <span data-en>Latin America</span><span data-es>América Latina</span></span>
+      <span class="badge">📋 <span data-en>Public Policy</span><span data-es>Política Pública</span></span>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="heat-graphic">
+      <div class="heat-ring"></div>
+      <div class="heat-ring"></div>
+      <div class="heat-ring"></div>
+      <div class="heat-icon">🌡️</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ NAV ══════ -->
+<nav>
+  <a href="#about" data-en>About</a>
+  <a href="#about" data-es>Acerca de</a>
+  <a href="#research" data-en>Research Lines</a>
+  <a href="#research" data-es>Líneas de Investigación</a>
+  <a href="#team" data-en>Team</a>
+  <a href="#team" data-es>Equipo</a>
+  <a href="#institutions" data-en>Partners</a>
+  <a href="#institutions" data-es>Instituciones</a>
+  <a href="#contact" data-en>Contact</a>
+  <a href="#contact" data-es>Contacto</a>
+</nav>
+
+<!-- ══════ ABOUT ══════ -->
+<section id="about">
+  <div class="container">
+    <div class="section-label"><span data-en>About the Project</span><span data-es>Sobre el Proyecto</span></div>
+    <div class="about-grid">
+      <div class="about-text" data-en>
+        <h2>Why this research matters</h2>
+        <p>Extreme heat is one of the most dangerous yet least visible consequences of climate change. For school-age children spending hours in inadequately ventilated classrooms, it poses a direct threat to their health, cognitive performance, and wellbeing.</p>
+        <p>This project brings together researchers, civil society organizations, and health advocates from across Latin America to understand the scale of the problem and generate evidence that drives concrete policy change.</p>
+        <p>We work across Chile, Colombia, and Peru — countries facing rapid warming trends — to build a regional picture of heat exposure in schools and develop practical, policy-ready recommendations.</p>
+      </div>
+      <div class="about-text" data-es>
+        <h2>Por qué importa esta investigación</h2>
+        <p>El calor extremo es una de las consecuencias más peligrosas y menos visibles del cambio climático. Para niños y niñas en edad escolar que pasan horas en aulas mal ventiladas, representa una amenaza directa para su salud, rendimiento cognitivo y bienestar.</p>
+        <p>Este proyecto reúne investigadores, organizaciones de la sociedad civil y defensores de la salud de América Latina para entender la magnitud del problema y generar evidencia que impulse cambios de política concretos.</p>
+        <p>Trabajamos en Chile, Colombia y Perú —países que enfrentan tendencias aceleradas de calentamiento— para construir un panorama regional de la exposición al calor en las escuelas y desarrollar recomendaciones prácticas listas para la política pública.</p>
+      </div>
+      <div class="about-stats">
+        <div class="stat-card">
+          <div class="stat-num">3</div>
+          <div class="stat-label" data-en>Countries · Chile, Colombia & Peru</div>
+          <div class="stat-label" data-es>Países · Chile, Colombia y Perú</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">6</div>
+          <div class="stat-label" data-en>Partner institutions across the region</div>
+          <div class="stat-label" data-es>Instituciones socias en la región</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">∞</div>
+          <div class="stat-label" data-en>Students we aim to protect</div>
+          <div class="stat-label" data-es>Estudiantes que buscamos proteger</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ RESEARCH LINES ══════ -->
+<section id="research">
+  <div class="container">
+    <div class="section-label"><span data-en>Research Lines</span><span data-es>Líneas de Investigación</span></div>
+    <h2 data-en>What we're investigating</h2>
+    <h2 data-es>Qué investigamos</h2>
+    <div class="lines-grid">
+      <div class="line-card">
+        <span class="line-icon">🌡️</span>
+        <h3 data-en>Heat Exposure Measurement</h3>
+        <h3 data-es>Medición de Exposición al Calor</h3>
+        <p data-en>Documenting temperature conditions inside classrooms across different contexts and socioeconomic settings in the region.</p>
+        <p data-es>Documentando las condiciones de temperatura dentro de las aulas en distintos contextos y niveles socioeconómicos de la región.</p>
+      </div>
+      <div class="line-card">
+        <span class="line-icon">🧠</span>
+        <h3 data-en>Health & Cognitive Impacts</h3>
+        <h3 data-es>Impactos en Salud y Cognición</h3>
+        <p data-en>Assessing how extreme heat affects students' physical health, mental wellbeing, and learning capacity.</p>
+        <p data-es>Evaluando cómo el calor extremo afecta la salud física, el bienestar mental y la capacidad de aprendizaje de los estudiantes.</p>
+      </div>
+      <div class="line-card">
+        <span class="line-icon">⚖️</span>
+        <h3 data-en>Policy Landscape Analysis</h3>
+        <h3 data-es>Análisis del Panorama de Políticas</h3>
+        <p data-en>Mapping existing regulations, gaps, and opportunities for heat-related school health policy in Chile, Colombia and Peru.</p>
+        <p data-es>Mapeo de regulaciones existentes, brechas y oportunidades para políticas de salud escolar frente al calor en Chile, Colombia y Perú.</p>
+      </div>
+      <div class="line-card">
+        <span class="line-icon">🏘️</span>
+        <h3 data-en>Equity & Vulnerability</h3>
+        <h3 data-es>Equidad y Vulnerabilidad</h3>
+        <p data-en>Understanding which communities and schools are most at risk, with a focus on socioeconomic disparities.</p>
+        <p data-es>Entendiendo qué comunidades y escuelas están en mayor riesgo, con foco en las disparidades socioeconómicas.</p>
+      </div>
+      <div class="line-card">
+        <span class="line-icon">📢</span>
+        <h3 data-en>Knowledge Translation</h3>
+        <h3 data-es>Traducción del Conocimiento</h3>
+        <p data-en>Transforming research evidence into accessible materials for policymakers, educators, and the public.</p>
+        <p data-es>Transformando evidencia de investigación en materiales accesibles para tomadores de decisiones, educadores y el público.</p>
+      </div>
+      <div class="line-card">
+        <span class="line-icon">🤝</span>
+        <h3 data-en>Policy Engagement</h3>
+        <h3 data-es>Incidencia en Políticas</h3>
+        <p data-en>Working with governments and civil society to turn evidence into protective policies for school communities.</p>
+        <p data-es>Trabajando con gobiernos y sociedad civil para convertir la evidencia en políticas protectoras para las comunidades escolares.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ TEAM ══════ -->
+<section id="team">
+  <div class="container">
+    <div class="section-label"><span data-en>Our Team</span><span data-es>Nuestro Equipo</span></div>
+    <h2 data-en>The people behind the research</h2>
+    <h2 data-es>Las personas detrás de la investigación</h2>
+    <p class="team-intro" data-en>A multidisciplinary team of researchers, public health experts, climate scientists, and civil society advocates united by a common goal: protecting children from heat.</p>
+    <p class="team-intro" data-es>Un equipo multidisciplinario de investigadores, expertos en salud pública, científicos del clima y activistas de la sociedad civil, unidos por un objetivo común: proteger a los niños del calor.</p>
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="team-avatar">YP</div>
+        <h4>Yasna Palmeiro</h4>
+        <div class="role">Principal Investigator</div>
+        <div class="affil">— PI —</div>
+      </div>
+      <div class="team-card" style="border:1px dashed rgba(255,255,255,.2);">
+        <div class="team-avatar" style="background:rgba(255,255,255,.12);">+</div>
+        <h4 style="color:rgba(255,255,255,.5);" data-en>Team member</h4>
+        <h4 style="color:rgba(255,255,255,.5);" data-es>Miembro del equipo</h4>
+        <div class="role" style="color:rgba(249,186,116,.4);" data-en>Coming soon</div>
+        <div class="role" style="color:rgba(249,186,116,.4);" data-es>Próximamente</div>
+      </div>
+      <div class="team-card" style="border:1px dashed rgba(255,255,255,.2);">
+        <div class="team-avatar" style="background:rgba(255,255,255,.12);">+</div>
+        <h4 style="color:rgba(255,255,255,.5);" data-en>Team member</h4>
+        <h4 style="color:rgba(255,255,255,.5);" data-es>Miembro del equipo</h4>
+        <div class="role" style="color:rgba(249,186,116,.4);" data-en>Coming soon</div>
+        <div class="role" style="color:rgba(249,186,116,.4);" data-es>Próximamente</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ INSTITUTIONS ══════ -->
+<section id="institutions">
+  <div class="container">
+    <div class="section-label"><span data-en>Partner Institutions</span><span data-es>Instituciones Socias</span></div>
+    <h2 data-en>Who we work with</h2>
+    <h2 data-es>Con quiénes trabajamos</h2>
+    <div class="inst-grid">
+      <div class="inst-pill"><span class="inst-flag">🇵🇪</span> UPCH Perú</div>
+      <div class="inst-pill"><span class="inst-flag">🇨🇴</span> Universidad de los Andes</div>
+      <div class="inst-pill"><span class="inst-flag">🇨🇱</span> Corporación Ciudades</div>
+      <div class="inst-pill"><span class="inst-flag">🇨🇱</span> Universidad de Chile</div>
+      <div class="inst-pill"><span class="inst-flag">🌎</span> MICROB-R</div>
+      <div class="inst-pill"><span class="inst-flag">🌎</span> Salud con Lupa</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ CONTACT ══════ -->
+<section id="contact">
+  <div class="container">
+    <div class="section-label"><span data-en>Get in touch</span><span data-es>Contacto</span></div>
+    <div class="contact-box">
+      <div>
+        <h2 data-en>Interested in this research?</h2>
+        <h2 data-es>¿Te interesa esta investigación?</h2>
+        <p data-en>Whether you're a researcher, policymaker, journalist, or just curious — we'd love to hear from you.</p>
+        <p data-es>Seas investigador, tomador de decisiones, periodista o simplemente tienes curiosidad — nos encantaría escucharte.</p>
+      </div>
+      <div class="contact-info">
+        <div class="contact-item">
+          <span class="contact-item-icon">👤</span>
+          <div class="contact-item-text">
+            <strong data-en>Principal Investigator</strong>
+            <strong data-es>Investigadora Principal</strong>
+            <span>Yasna Palmeiro</span>
+          </div>
+        </div>
+        <div class="contact-item">
+          <span class="contact-item-icon">✉️</span>
+          <div class="contact-item-text">
+            <strong data-en>Email</strong>
+            <strong data-es>Correo</strong>
+            <span>contact@[your-email].com</span>
+          </div>
+        </div>
+        <div class="contact-item">
+          <span class="contact-item-icon">🌎</span>
+          <div class="contact-item-text">
+            <strong data-en>Region</strong>
+            <strong data-es>Región</strong>
+            <span>Latin America</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ FOOTER ══════ -->
+<footer>
+  <p data-en>© 2025 Making a Silent Killer Visible · Built with <span>♥</span> for climate-health research in Latin America</p>
+  <p data-es>© 2025 Making a Silent Killer Visible · Hecho con <span>♥</span> para la investigación de clima y salud en América Latina</p>
+</footer>
+
+<script>
+  function toggleLang() {
+    const btn = document.getElementById('lang-toggle');
+    if (document.body.classList.contains('lang-en')) {
+      document.body.classList.replace('lang-en', 'lang-es');
+      btn.textContent = '🌐 EN';
+    } else {
+      document.body.classList.replace('lang-es', 'lang-en');
+      btn.textContent = '🌐 ES';
+    }
+  }
+</script>
+
+</body>
+</html>
